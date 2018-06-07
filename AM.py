@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+# just formatting changes for figures I use
 from matplotlib import rc
 from matplotlib import rcParams
 rc('font',**{'family':'serif','serif':['STIXGeneral'], 'weight': 'normal', 'size':'12'})
@@ -22,7 +23,10 @@ import numericalunits as nu
 #%%
 '''
 
+This has been adapted from http://sjbyrnes.com/sq.html, which has more detailed explanation. 
+This code creates a pandas df which is easier to use
 My way....
+
 
 '''
 h = 4.135667662e-15 #eV.s Planks constant
@@ -33,7 +37,7 @@ e = 1.60217662e-19
 JeV = 1.6e-19
 eVnm = 1239.84193
 
-AM = pd.read_excel(r'C:\Users\sp4009\OneDrive - Imperial College London\PhDThesis\C_Intro\AM\ASTMG173\ASTMG173.xlsx', header = 1, index_col = 0)
+AM = pd.read_excel(r'ASTMG173.xlsx', header = 1, index_col = 0)
 '''
 AM.index                wavelength                  nm
 AM['eV']                electron volt               eV
@@ -41,7 +45,6 @@ AM['Global tilt']       Solar irrandiance           J / s / m**2 / nm
 AM['GTphoton']          Photon intensity            photon / s / m**2 
 AM['GTphotonTrapz']     Intergrated photon int.     photons[E-E_infinitiy] / s / m**2
 AM['RR0']               Spectral radiance density   done per area
-#AM['RR0Trapz']
 AM['RRint']             Radiative recombination     ???
 AM['Jsc']               current density             mA / cm**2
 AM['Voc']               OC voltage                  V
@@ -55,11 +58,7 @@ AM['GTphoton'] = AM['Global tilt'] / (AM['eV']*JeV)
 # intergrate photon count
 AM['GTphotonTrapz'] = [np.trapz(AM['GTphoton'][:i], x = AM['GTphoton'][:i].index) for i in AM.index]
 
-# my intergration didn't work so had to use Steve's little code below
-#AM['RR'] = (2 * np.pi) / (c**2 * h**3) * ((AM['eV'])**2 / (np.exp(AM['eV'] / (k*T)) - 1) )
-#AM['RRTrapz'] = [np.trapz(AM['RR'][:i], x = AM['RR'][:i].index) for i in AM.index]#intergrating from bandgap to max energy so needs to be reverse order of wavelength
-
-# calculate the amount of black body radiative recombination, with a given voltage spillting fermi level into quasi fermi level
+# calculate the amount of black body radiative recombination, with a given voltage spilting fermi level into quasi fermi level
 def RR02(Egap):
     integrand = lambda E : E**2 / (np.exp(E / (k * T)) - 1)
     integral = scipy.integrate.quad(integrand, Egap, AM['eV'].max(), full_output=1)[0]
@@ -78,7 +77,7 @@ def J(V):
 
 # current at 0 V
 AM['Jsc'] = J(0)
-# voltage when photons absorbed = RR0, radiative recombination
+# voltage when =>  photons absorbed = RR0, radiative recombination then solve function 'J(V)' above to calculate unkonwn V.
 AM['Voc'] = e * (k * T / e) * np.log(AM['GTphotonTrapz'] / AM['RRint'])  
 
 # calculating the JV cureves for all wavelengths from Vrange
@@ -100,11 +99,24 @@ AM['Pmax'] = P.max()
 
 AM['FF'] = AM['Pmax']/(AM['Jsc']*AM['Voc'])
 
-#%%
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+#That is all the code for for calculating the SQ limit.
+
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 '''
-Thesis plots...
+
+
+
+Various plots...
+
+
+
 '''
-#%%
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fig, ax = plt.subplots(figsize=(3,3))
 
 ax1 = ax.twiny()
@@ -249,10 +261,28 @@ plt.tight_layout()
 f.savefig(r'C:\Users\sp4009\OneDrive - Imperial College London\PhDThesis\C_Intro\AM/Lin', bbox_inches='tight',dpi=600)
 
 
-#%% calculate SQ efficency
+
+
+
+
+
+
+
+
+
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 '''
-Steves normal
+
+
+
+Steves Byrnes code http://sjbyrnes.com/sq.html
+
+
+
 '''
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 import numpy, scipy.interpolate, scipy.integrate, urllib.request, io, tarfile
 import numericalunits as nu
 
